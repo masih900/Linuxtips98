@@ -1,18 +1,24 @@
 #!/usr/bin/env python3
 
 import requests
+import warnings
 from rich.console import Console
 from rich.table import Table
 from rich.progress import track
 import time
 import os
 
+warnings.filterwarnings("ignore", category=requests.packages.urllib3.exceptions.InsecureRequestWarning)
+
 console = Console()
 
 def download_tip(url, output_file):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
     try:
         console.print(f"[bold cyan]Downloading tip from {url}...[/bold cyan]")
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, headers=headers, timeout=15, verify=False)
         response.raise_for_status()
         
         with open(output_file, 'w', encoding='utf-8') as f:
@@ -30,8 +36,15 @@ def download_tip(url, output_file):
         table.add_row("Status", "Completed")
         console.print(table)
         
+    except requests.exceptions.SSLError as ssl_err:
+        console.print(f"[bold red]SSL Error: {str(ssl_err)}. SSL verification bypassed, but still failed.[/bold red]")
+        with open("error_log.txt", "a") as log:
+            log.write(f"{time.ctime()}: SSL Error for {url} - {str(ssl_err)}\n")
+        return False
     except requests.exceptions.RequestException as e:
-        console.print(f"[bold red]Error: {str(e)}[/bold red]")
+        console.print(f"[bold red]Error: {str(e)}. Check your connection or site availability.[/bold red]")
+        with open("error_log.txt", "a") as log:
+            log.write(f"{time.ctime()}: Error for {url} - {str(e)}\n")
         return False
     return True
 
