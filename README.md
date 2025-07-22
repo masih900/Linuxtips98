@@ -11,10 +11,12 @@
 برای مثال فایل update-packages پکیج های ترموکس/لینوکس شما را بروزرسانی میکند تا در انجام کار های خود دچار مشکل نشوید.
 ‌
 ‌
-‌‌
+‍
+توضیحات به صورت کامل و بدون باگ جا به جایی در توضیحات https://raw.githubusercontent.com/masih900/Linuxtips98/refs/heads/main/README.md‌‍
+
+
 ‌‌
 ‌
 ‌
 #اسکی با ذکر منبع
 تمامی حقوق محفوظ است © 
-توضیحات به صورت کامل و بدون باگ جا به جایی در توضیحات https://raw.githubusercontent.com/masih900/Linuxtips98/refs/heads/main/README.md
