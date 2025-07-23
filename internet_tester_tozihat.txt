@@ -1,0 +1,3 @@
+barai estefade az file pythoni faghat inha ro bezanid chon inha ketabkhone hai mored niaz hastand
+
+pip install speedtest-cli rich
