@@ -1,3 +1,7 @@
 barai estefade az file pythoni faghat inha ro bezanid chon inha ketabkhone hai mored niaz hastand
 
 pip install speedtest-cli rich
+
+اگر به دلایلی نتوانستید پایتون را نصب کنید میتوانید از نسخه (بش) استفاده کنید که فرمت آن 
+.sh است اسم فایل یکی است اما فرمت فرق میکند برای ران کردن این فایل بش باید آن را 
+chmod بکنید 
