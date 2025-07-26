@@ -10,7 +10,9 @@ import warnings
 import threading
 import sys
 import socket
+import os
 
+os.environ["FLASK_ENV"] = "production"
 warnings.filterwarnings("ignore")
 
 console = Console()
@@ -29,20 +31,23 @@ def get_local_ip():
 
 def get_proxies():
     try:
-        response = requests.get("https://free-proxy-list.net/", timeout=10)
+        response = requests.get("https://advanced.name/freeproxy", headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
         soup = BeautifulSoup(response.text, "html.parser")
         table = soup.find("table")
         proxies = []
-        for row in table.find_all("tr")[1:10]:
+        for row in table.find_all("tr")[1:30]:
             cols = row.find_all("td")
             if len(cols) > 1:
                 ip = cols[0].text
                 port = cols[1].text
-                https = cols[6].text
-                if https == "yes":
+                protocol = cols[2].text.lower()
+                if "https" in protocol:
                     proxies.append(f"http://{ip}:{port}")
         return proxies
-    except:
+    except Exception as e:
+        console.print(f"[bold red]Error fetching proxies: {str(e)}[/bold red]")
+        with open("error_log.txt", "a") as log:
+            log.write(f"{time.ctime()}: Error fetching proxies - {str(e)}\n")
         return []
 
 def test_proxy(proxy):
@@ -57,13 +62,22 @@ def fetch_youtube(url):
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
     proxies = get_proxies()
+    if not proxies:
+        console.print("[bold red]Error: No proxies available[/bold red]")
+        with open("error_log.txt", "a") as log:
+            log.write(f"{time.ctime()}: No proxies available\n")
+        return None
     for proxy in proxies:
+        console.print(f"[bold yellow]Testing proxy: {proxy}[/bold yellow]")
         if test_proxy(proxy):
             try:
                 response = requests.get(url, headers=headers, proxies={"http": proxy, "https": proxy}, timeout=15, verify=False)
                 response.raise_for_status()
                 return response.text
-            except:
+            except requests.exceptions.RequestException as e:
+                console.print(f"[bold red]Proxy failed: {proxy} - {str(e)}[/bold red]")
+                with open("error_log.txt", "a") as log:
+                    log.write(f"{time.ctime()}: Proxy {proxy} failed - {str(e)}\n")
                 continue
     console.print("[bold red]Error: No working proxy found[/bold red]")
     with open("error_log.txt", "a") as log:
@@ -86,7 +100,7 @@ def proxy(path=""):
         console.print("[bold green]Success! YouTube loaded![/bold green]")
         return Response(content, mimetype='text/html')
     else:
-        return Response("Error: Could not fetch YouTube.", status=500)
+        return Response("Error: Could not fetch YouTube. Check error_log.txt.", status=500)
 
 @app.route('/shutdown')
 def shutdown():
