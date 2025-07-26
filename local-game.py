@@ -1,37 +1,55 @@
 #!/usr/bin/env python3
 
+import subprocess
+import os
+import sys
 import requests
 from bs4 import BeautifulSoup
 from rich.console import Console
 from rich.progress import track, Progress, SpinnerColumn, TextColumn
 from rich.table import Table
-import os
 import re
 import urllib.parse
 import json
 import time
 import threading
-import sys
 import http.server
 import socketserver
 
 console = Console()
 server_running = True
 
+def install_libraries():
+    installed_file = "/data/data/com.termux/files/home/installed.txt"
+    if not os.path.exists(installed_file):
+        console.print("[bold cyan]Installing required libraries...[/bold cyan]")
+        libraries = ["requests", "beautifulsoup4", "rich"]
+        for lib in libraries:
+            with Progress(SpinnerColumn(), TextColumn("[cyan]Installing {task.description}..."), transient=True) as progress:
+                progress.add_task(lib)
+                subprocess.run([sys.executable, "-m", "pip", "install", lib], check=True)
+        with open(installed_file, "w") as f:
+            f.write("installed")
+        console.print("[bold green]Libraries installed successfully![/bold green]")
+
+def clean_url(url):
+    return re.sub(r"#.*$", "", url).split("?")[0]
+
 def download_game(url, game_name):
     game_dir = os.path.join("playhop_games", game_name)
     os.makedirs(game_dir, exist_ok=True)
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0.4472.124"}
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
     try:
+        url = clean_url(url)
         response = requests.get(url, headers=headers, timeout=15)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
         with open(os.path.join(game_dir, "index.html"), "w", encoding="utf-8") as f:
             f.write(response.text)
         assets = set()
-        for tag in soup.find_all(["script", "link", "img"]):
+        for tag in soup.find_all(["script", "link", "img", "source"]):
             src = tag.get("src") or tag.get("href")
-            if src and not src.startswith("http"):
+            if src and not src.startswith(("http", "//")):
                 assets.add(src)
         for asset in assets:
             asset_url = urllib.parse.urljoin(url, asset)
@@ -89,7 +107,7 @@ def check_shutdown():
     console.print("[bold blue]Type 'q' and press Enter to stop the server[/bold blue]")
     while server_running:
         try:
-            if input().lower() == 'q':
+            if input().lower() == "q":
                 server_running = False
                 console.print("[bold yellow]Shutting down server...[/bold yellow]")
                 sys.exit(0)
@@ -97,21 +115,24 @@ def check_shutdown():
             time.sleep(1)
 
 def main():
+    os.system("clear")
+    install_libraries()
+    os.system("clear")
     console.print("[bold yellow]🌐 Playhop Game Downloader 🌐[/bold yellow]")
     os.makedirs("playhop_games", exist_ok=True)
     while True:
         console.print("[bold cyan]Options:[/bold cyan]")
         console.print("1. Download a new game")
-        console.print("2. Run server = 01")
+        console.print("2. run server = 01")
         console.print("q. Quit")
         choice = input("Enter choice: ").strip().lower()
         if choice == "q":
             console.print("[bold yellow]Exiting...[/bold yellow]")
             break
         elif choice == "1":
-            console.print("[bold cyan]Enter Playhop game URL (e.g., https://playhop.com/game/solitaire):[/bold cyan]")
+            console.print("[bold cyan]Enter Playhop game URL (e.g., https://playhop.com/app/210036):[/bold cyan]")
             url = input().strip()
-            console.print("[bold cyan]Enter game name (e.g., Solitaire):[/bold cyan]")
+            console.print("[bold cyan]Enter game name (e.g., AdventureGame):[/bold cyan]")
             game_name = input().strip()
             game_name = re.sub(r"[^\w\-]", "_", game_name)
             with Progress(SpinnerColumn(), TextColumn("[cyan]Downloading {task.description}..."), transient=True) as progress:
@@ -142,4 +163,4 @@ def main():
             console.print("[bold red]Invalid choice.[/bold red]")
 
 if __name__ == "__main__":
-    main()
+    main()Invalid choice.[/red]")
