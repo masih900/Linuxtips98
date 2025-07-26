@@ -123,7 +123,7 @@ def main():
     while True:
         console.print("[bold cyan]Options:[/bold cyan]")
         console.print("1. Download a new game")
-        console.print("2. run server = 01")
+        console.print("2. run server")
         console.print("q. Quit")
         choice = input("Enter choice: ").strip().lower()
         if choice == "q":
@@ -139,7 +139,7 @@ def main():
                 progress.add_task(game_name)
                 download_game(url, game_name)
         elif choice == "2":
-            console.print("[bold green]run server = 01[/bold green]")
+            console.print("[bold green]run server[/bold green]")
             show_games()
             games = list_games()
             if games:
