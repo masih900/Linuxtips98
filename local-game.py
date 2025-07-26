@@ -156,11 +156,11 @@ def main():
                         while server_running:
                             time.sleep(1)
                     else:
-                        console.print("[bold red]Invalid game ID.[/bold red]")
+                        console.print("[bold red]Invalid game ID[/bold red]")
                 except ValueError:
-                    console.print("[bold red]Invalid input. Enter a number.[/bold red]")
+                    console.print("[bold red]Invalid input. Enter a number[/bold red]")
         else:
-            console.print("[bold red]Invalid choice.[/bold red]")
+            console.print("[bold red]Invalid choice[/bold red]")
 
 if __name__ == "__main__":
-    main()Invalid choice.[/red]")
+    main()
