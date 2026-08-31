@@ -26,8 +26,4 @@ thread.start()
 time.sleep(2)
 
 from google.colab import output
-from pyngrok import ngrok
-
-public_url = ngrok.connect(5000).public_url
-print("Public URL:", public_url)
-output.eval_js('window.open("' + public_url + '", "_blank");')
+output.eval_js("google.colab.kernel.proxyPort(5000)")
