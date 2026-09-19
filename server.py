@@ -1,7 +1,6 @@
 import http.server
 import socketserver
 import json
-import os
 
 PORT = 8080
 
