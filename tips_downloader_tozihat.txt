@@ -1,3 +1,0 @@
-barai estefade az file pythone faghat inha ro berizid 
-
-pip install requests rich 
